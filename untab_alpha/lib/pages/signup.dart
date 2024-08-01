@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:intl/intl.dart';
 
 class SignUp extends StatefulWidget {
@@ -36,6 +38,98 @@ class _SignUpState extends State<SignUp> {
     }
   }
 
+  Future<void> _signUp() async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showErrorDialog('Passwords do not match');
+      return;
+    }
+
+    _showLoadingDialog();
+
+    final url = Uri.parse('https://untab-backend.nw.r.appspot.com/create_user'); // Replace with your Flask API URL
+    final response = await http.post(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'fname': _fnameController.text,
+        'lname': _lnameController.text,
+        'email': _emailController.text,
+        'passwordHash': _passwordController.text,
+        'gender': _gender,
+        'phoneNumber': _phoneController.text,
+        'dob': _dobController.text,
+      }),
+    );
+
+    Navigator.of(context).pop(); // Close the loading dialog
+
+    if (response.statusCode == 200) {
+      _showSuccessDialog('Registration Successful!', '/login');
+    } else {
+      final responseData = jsonDecode(response.body);
+      _showErrorDialog(responseData['message'] ?? 'An error occurred');
+    }
+  }
+
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog(String message, String route) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Success'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                Navigator.pushReplacementNamed(context, route); // Navigate to the login page
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Okay'),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _dobController.dispose();
@@ -64,7 +158,7 @@ class _SignUpState extends State<SignUp> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const  Text(
+                const Text(
                   'Create An Account',
                   style: TextStyle(
                     fontSize: 32,
@@ -212,10 +306,10 @@ class _SignUpState extends State<SignUp> {
                     ),
                   ),
                   keyboardType: TextInputType.phone,
-                  style: const  TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your phone number';
+                    if (value == null || value.isEmpty || value.length < 10) {
+                      return 'Please enter a valid phone number';
                     }
                     return null;
                   },
@@ -296,10 +390,10 @@ class _SignUpState extends State<SignUp> {
                   ),
                   onPressed: () {
                     if (_formKey.currentState?.validate() ?? false) {
-                      // Handle sign up logic
+                      _signUp();
                     }
                   },
-                  child: const Text('Sign Up', style: const TextStyle(color: Colors.black)),
+                  child: const Text('Sign Up', style: TextStyle(color: Colors.black)),
                 ),
               ],
             ),

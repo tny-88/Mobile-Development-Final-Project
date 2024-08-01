@@ -66,7 +66,7 @@ class _LoginState extends State<Login> {
                         controller: _emailController,
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          labelStyle: TextStyle(color: Colors.white),
+                          labelStyle: const TextStyle(color: Colors.white),
                           filled: true,
                           fillColor: Colors.grey[400],
                           border: OutlineInputBorder(
@@ -75,7 +75,7 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                         keyboardType: TextInputType.emailAddress,
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your email';
@@ -83,12 +83,12 @@ class _LoginState extends State<Login> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _passwordController,
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          labelStyle: TextStyle(color: Colors.white),
+                          labelStyle: const TextStyle(color: Colors.white),
                           filled: true,
                           fillColor: Colors.grey[400],
                           border: OutlineInputBorder(
@@ -97,7 +97,7 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                         obscureText: true,
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your password';
@@ -105,7 +105,7 @@ class _LoginState extends State<Login> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
@@ -118,27 +118,27 @@ class _LoginState extends State<Login> {
                             // Handle login logic
                           }
                         },
-                        child: Text(
+                        child: const Text(
                           'Log in',
-                          style: TextStyle(color: Colors.black),
+                          style:  TextStyle(color: Colors.black),
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
+                          const Text(
                             "Don't have an account?",
-                            style: TextStyle(color: Colors.white),
+                            style:  TextStyle(color: Colors.white),
                           ),
                           TextButton(
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => SignUp()),
+                                MaterialPageRoute(builder: (context) => const SignUp()),
                               );
                             },
-                            child: Text(
+                            child: const Text(
                               'Sign Up',
                               style: TextStyle(color: Colors.white),
                             ),
