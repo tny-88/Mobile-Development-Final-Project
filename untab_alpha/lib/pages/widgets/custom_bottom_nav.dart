@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:untab_alpha/pages/logged_in/emergency_contacts.dart';
 import 'package:untab_alpha/pages/logged_in/homepage.dart';
+import 'package:untab_alpha/pages/logged_in/profile.dart';
 
 class CustomBottomNav extends StatefulWidget {
   const CustomBottomNav({super.key});
@@ -14,6 +15,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   final List<Widget> screens = const [
     Homepage(),
     EmergencyContacts(),
+    Profile()
   ];
 
 
@@ -30,7 +32,8 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Contacts'),
+          BottomNavigationBarItem(icon: Icon(Icons.emergency), label: 'Contacts'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
