@@ -148,6 +148,29 @@ class ApiService {
     }
   }
 
+  static Future<bool> deleteMedication(String medicationId) async {
+    final jwtToken = await getJwtToken();
+    if (jwtToken == null) {
+      print('JWT token not found');
+      return false;
+    }
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/delete_medication/$medicationId'),
+      headers: {
+        'Authorization': 'Bearer $jwtToken',
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print('Failed to delete medication: ${response.statusCode} - ${response.reasonPhrase}');
+      return false;
+    }
+  }
+
   static Future<bool> addEmergencyContact({
     required String fname,
     required String lname,

@@ -99,7 +99,13 @@ class _HomepageState extends State<Homepage> {
                   },
                 ),
                 TextButton(
-                  child: isLoading ? CircularProgressIndicator() : const Text('Add'),
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Add'),
                   onPressed: () async {
                     setState(() {
                       isLoading = true;
@@ -123,18 +129,14 @@ class _HomepageState extends State<Homepage> {
                         Navigator.of(context).pop();
                       } else {
                         // Show error message
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text('Failed to add medication.'),
-                          ));
-                        }
-                      }
-                    } else {
-                      if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Please fill in all fields.'),
+                          content: Text('Failed to add medication.'),
                         ));
                       }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Please fill in all fields.'),
+                      ));
                     }
                     setState(() {
                       isLoading = false;
@@ -194,7 +196,13 @@ class _HomepageState extends State<Homepage> {
                   },
                 ),
                 TextButton(
-                  child: isLoading ? CircularProgressIndicator() : const Text('Update'),
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Update'),
                   onPressed: () async {
                     setState(() {
                       isLoading = true;
@@ -219,18 +227,42 @@ class _HomepageState extends State<Homepage> {
                         Navigator.of(context).pop();
                       } else {
                         // Show error message
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text('Failed to update medication.'),
-                          ));
-                        }
-                      }
-                    } else {
-                      if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Please fill in all fields.'),
+                          content: Text('Failed to update medication.'),
                         ));
                       }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Please fill in all fields.'),
+                      ));
+                    }
+                    setState(() {
+                      isLoading = false;
+                    });
+                  },
+                ),
+                TextButton(
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Delete'),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final success = await ApiService.deleteMedication(medication['medicationID']);
+                    if (success) {
+                      // Reload data
+                      await loadData();
+                      Navigator.of(context).pop();
+                    } else {
+                      // Show error message
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Failed to delete medication.'),
+                      ));
                     }
                     setState(() {
                       isLoading = false;
@@ -357,7 +389,7 @@ class _HomepageState extends State<Homepage> {
                             ...emergencyContacts.take(5).map((contact) {
                               return Text(
                                 '${contact['fname']} ${contact['lname']}: ${contact['phoneNumber']}',
-                                  style: const TextStyle(
+                                style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
                                 ),
