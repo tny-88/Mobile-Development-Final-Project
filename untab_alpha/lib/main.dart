@@ -20,7 +20,7 @@ class MainApp extends StatelessWidget {
         '/': (context) => const Login(),
         '/login': (context) => const Login(),
         '/signup': (context) => const SignUp(),
-        '/home': (context) => const CustomBottomNav(),
+        '/home': (context) =>  const CustomBottomNav(),
       },
     );
   }

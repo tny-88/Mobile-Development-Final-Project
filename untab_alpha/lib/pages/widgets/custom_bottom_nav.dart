@@ -31,7 +31,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
           });
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.medical_information), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.emergency), label: 'Contacts'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],

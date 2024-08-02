@@ -1,3 +1,4 @@
+// api_service.dart
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -145,6 +146,100 @@ class ApiService {
       return true;
     } else {
       print('Failed to add contact: ${response.statusCode} - ${response.reasonPhrase}');
+      return false;
+    }
+  }
+
+  static Future<bool> updateEmergencyContact({
+    required String contactId,
+    required String fname,
+    required String lname,
+    required String phoneNumber,
+    required String relationship,
+  }) async {
+    final jwtToken = await getJwtToken();
+    if (jwtToken == null) {
+      print('JWT token not found');
+      return false;
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/update_emergency_contact/$contactId'),
+      headers: {
+        'Authorization': 'Bearer $jwtToken',
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode({
+        'fname': fname,
+        'lname': lname,
+        'phoneNumber': phoneNumber,
+        'relationship': relationship,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print('Failed to update contact: ${response.statusCode} - ${response.reasonPhrase}');
+      return false;
+    }
+  }
+
+  static Future<bool> deleteEmergencyContact(String contactId) async {
+    final jwtToken = await getJwtToken();
+    if (jwtToken == null) {
+      print('JWT token not found');
+      return false;
+    }
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/delete_emergency_contact/$contactId'),
+      headers: {
+        'Authorization': 'Bearer $jwtToken',
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print('Failed to delete contact: ${response.statusCode} - ${response.reasonPhrase}');
+      return false;
+    }
+  }
+
+  static Future<bool> updateUserDetails({
+    required String fname,
+    required String lname,
+    required String phoneNumber,
+    required String dob,
+    required String gender,
+  }) async {
+    final jwtToken = await getJwtToken();
+    if (jwtToken == null) {
+      print('JWT token not found');
+      return false;
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/update_user_details'),
+      headers: {
+        'Authorization': 'Bearer $jwtToken',
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode({
+        'fname': fname,
+        'lname': lname,
+        'phoneNumber': phoneNumber,
+        'dob': dob,
+        'gender': gender,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print('Failed to update user details: ${response.statusCode} - ${response.reasonPhrase}');
       return false;
     }
   }

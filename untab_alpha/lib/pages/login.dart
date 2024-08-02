@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:untab_alpha/classes/api_service.dart';
+import 'package:untab_alpha/pages/signup.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -12,15 +16,43 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
+  final _storage = FlutterSecureStorage();
+  final LocalAuthentication auth = LocalAuthentication();
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
-  final _storage = FlutterSecureStorage();
+  bool _isBiometricEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
+    _checkBiometricEnabled();
+  }
+
+  Future<void> _checkBiometricEnabled() async {
+    final biometricEnabled = await _storage.read(key: 'biometric_enabled');
+    if (biometricEnabled == 'true') {
+      setState(() {
+        _isBiometricEnabled = true;
+      });
+      _authenticateWithBiometrics();
+    }
+  }
+
+  Future<void> _authenticateWithBiometrics() async {
+    final isBiometricAvailable = await auth.canCheckBiometrics;
+    final didAuthenticate = await auth.authenticate(
+      localizedReason: 'Please authenticate to login',
+      options: const AuthenticationOptions(biometricOnly: true),
+    );
+
+    if (isBiometricAvailable && didAuthenticate) {
+      final jwtToken = await _storage.read(key: 'jwt_token');
+      if (jwtToken != null) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    }
   }
 
   @override
@@ -35,7 +67,7 @@ class _LoginState extends State<Login> {
       _showLoadingDialog();
 
       final response = await http.post(
-        Uri.parse('https://untab-backend.nw.r.appspot.com/login'), // Your API URL
+        Uri.parse('https://untab-backend.nw.r.appspot.com/login'),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({
           'email': _emailController.text,
@@ -66,13 +98,8 @@ class _LoginState extends State<Login> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ),
+        return const AlertDialog(
+          content: CircularProgressIndicator(),
         );
       },
     );
@@ -81,18 +108,20 @@ class _LoginState extends State<Login> {
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Error'),
-        content: Text(message),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Okay'),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-          )
-        ],
-      ),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -197,7 +226,10 @@ class _LoginState extends State<Login> {
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushNamed(context, '/signup');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const SignUp()),
+                              );
                             },
                             child: const Text(
                               'Sign Up',
@@ -217,3 +249,4 @@ class _LoginState extends State<Login> {
     );
   }
 }
+

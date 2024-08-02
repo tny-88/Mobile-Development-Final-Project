@@ -13,42 +13,48 @@ class _HomepageState extends State<Homepage> {
   String username = "User";
   List<dynamic> medications = [];
   List<dynamic> emergencyContacts = [];
-  final _storage = FlutterSecureStorage();
+  final _storage = const FlutterSecureStorage();
+  late Future<void> _dataFuture;
 
   @override
   void initState() {
     super.initState();
-    loadData();
+    _dataFuture = loadData();
   }
 
   Future<void> loadData() async {
-    final userData = await ApiService.fetchUserData();
-    if (userData != null && mounted) {
-      setState(() {
-        username = userData['fname'];
-      });
+    try {
+      final userData = await ApiService.fetchUserData();
+      if (userData != null && mounted) {
+        setState(() {
+          username = userData['fname'];
+        });
+      }
+
+      final fetchedMedications = await ApiService.fetchMedications();
+      if (fetchedMedications != null && mounted) {
+        setState(() {
+          medications = fetchedMedications;
+        });
+      }
+
+      final fetchedContacts = await ApiService.fetchEmergencyContacts();
+      if (fetchedContacts != null && mounted) {
+        setState(() {
+          emergencyContacts = fetchedContacts;
+        });
+      }
+    } catch (e) {
+      // Handle errors appropriately
+      if (mounted) {
+        setState(() {
+          username = "Error loading data";
+        });
+      }
     }
-
-    final fetchedMedications = await ApiService.fetchMedications();
-    if (fetchedMedications != null && mounted) {
-      setState(() {
-        medications = fetchedMedications;
-      });
-    }
-
-    final fetchedContacts = await ApiService.fetchEmergencyContacts();
-    if (fetchedContacts != null && mounted) {
-      setState(() {
-        emergencyContacts = fetchedContacts;
-      });
-    }
-}
-
-
-  Future<void> _logout() async {
-    await _storage.delete(key: 'jwt_token');
-    Navigator.pushReplacementNamed(context, '/login');
   }
+
+  
 
   Future<void> _addMedication() async {
     final TextEditingController dosageController = TextEditingController();
@@ -64,24 +70,24 @@ class _HomepageState extends State<Homepage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add Medication'),
+          title: const Text('Add Medication'),
           content: SingleChildScrollView(
             child: Column(
               children: <Widget>[
                 TextField(
                   controller: nameController,
-                  decoration: InputDecoration(labelText: 'Name'),
+                  decoration: const InputDecoration(labelText: 'Name'),
                 ),
                 Row(
                   children: [
                     Expanded(
                       child: TextField(
                         controller: dosageController,
-                        decoration: InputDecoration(labelText: 'Dosage'),
+                        decoration: const InputDecoration(labelText: 'Dosage'),
                         keyboardType: TextInputType.number,
                       ),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     DropdownButton<String>(
                       value: dosageUnit,
                       onChanged: (String? newValue) {
@@ -103,14 +109,14 @@ class _HomepageState extends State<Homepage> {
                   children: [
                     Expanded(
                       child: TextField(
-                        decoration: InputDecoration(labelText: 'Frequency Number'),
+                        decoration: const InputDecoration(labelText: 'Frequency Number'),
                         keyboardType: TextInputType.number,
                         onChanged: (value) {
                           frequencyValue = value;
                         },
                       ),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     DropdownButton<String>(
                       value: frequencyUnit,
                       onChanged: (String? newValue) {
@@ -130,24 +136,24 @@ class _HomepageState extends State<Homepage> {
                 ),
                 TextField(
                   controller: notesController,
-                  decoration: InputDecoration(labelText: 'Notes'),
+                  decoration: const InputDecoration(labelText: 'Notes'),
                 ),
                 TextField(
                   controller: scheduleController,
-                  decoration: InputDecoration(labelText: 'Schedule'),
+                  decoration: const InputDecoration(labelText: 'Schedule'),
                 ),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child:const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Add'),
+              child: const Text('Add'),
               onPressed: () async {
                 final name = nameController.text;
                 final dosage = '${dosageController.text} $dosageUnit';
@@ -166,16 +172,16 @@ class _HomepageState extends State<Homepage> {
                   );
                   if (success) {
                     // Reload data
-                    loadData();
+                    await loadData();
                     Navigator.of(context).pop();
                   } else {
                     // Show error message
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Failed to add medication.'),
+                      content: const Text('Failed to add medication.'),
                     ));
                   }
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar( const SnackBar(
                     content: Text('Please fill in all required fields.'),
                   ));
                 }
@@ -192,126 +198,152 @@ class _HomepageState extends State<Homepage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Home', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.purple[200],
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
+        
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hello, $username!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.purple[800],
-              ),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Your Medications',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.purple[800],
-              ),
-            ),
-            SizedBox(height: 10),
-            medications.isNotEmpty
-              ? SizedBox(
-                height: 150,  // Fixed height for the horizontal list
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: medications.length,
-                  itemBuilder: (context, index) {
-                    final medication = medications[index];
-                    return Container(
-                      width: 150,  // Set a fixed width for the cards
-                      margin: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Card(
-                        child: InkWell(
-                          onTap: () {
-                            // Navigate to detailed medication page
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  medication['name'],
-                                  style: TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  'Dosage: ${medication['dosage']}',
-                                  style: TextStyle(fontSize: 14, color: Colors.black54),
-                                  textAlign: TextAlign.center,
-                                ),
-                                Text(
-                                  'Frequency: ${medication['frequency']}',
-                                  style: TextStyle(fontSize: 14, color: Colors.black54),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              )
-              : Text('No medications available.'),
-            SizedBox(height: 20),
-            Text(
-              'Emergency Contacts',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.purple[800],
-              ),
-            ),
-            SizedBox(height: 10),
-            Card(
-              color: Colors.grey[200],
-              child: Padding(
+      body: RefreshIndicator(
+        onRefresh: loadData,
+        child: FutureBuilder<void>(
+          future: _dataFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else {
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ...emergencyContacts.take(5).map((contact) {
-                      return Text(
-                        '${contact['fname']} ${contact['lname']}: ${contact['phoneNumber']}',
-                        style: TextStyle(fontSize: 16, color: Colors.black),
-                      );
-                    }).toList(),
-                    if (emergencyContacts.length > 5)
-                      Text(
-                        '...',
-                        style: TextStyle(fontSize: 16, color: Colors.black),
+                    Text(
+                      'Hello, $username!',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple[800],
                       ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Your Medications',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple[800],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    medications.isNotEmpty
+                        ? SizedBox(
+                            height: 150, // Fixed height for the horizontal list
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: medications.length,
+                              itemBuilder: (context, index) {
+                                final medication = medications[index];
+                                return Container(
+                                  width: 150, 
+                                  margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                                  child: Card(
+                                    child: InkWell(
+                                      onTap: () {
+                                        // Navigate to detailed medication page
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              medication['name'],
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            const SizedBox(height: 10),
+                                            Text(
+                                              'Dosage: ${medication['dosage']}',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.black54,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            Text(
+                                              'Frequency: ${medication['frequency']}',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.black54,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        : const Text('No medications available.'),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Emergency Contacts',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple[800],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Card(
+                      color: Colors.grey[200],
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ...emergencyContacts.take(5).map((contact) {
+                              return Text(
+                                '${contact['fname']} ${contact['lname']}: ${contact['phoneNumber']}',
+                                  style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                              );
+                            }).toList(),
+                            if (emergencyContacts.length > 5)
+                              const Text(
+                                '...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ),
-          ],
+              );
+            }
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addMedication,
-        child: Icon(Icons.add),
+        
         backgroundColor: Colors.purple[200],
+        child: const Icon(Icons.add)
       ),
     );
   }
