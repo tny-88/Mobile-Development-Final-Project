@@ -50,7 +50,7 @@ class _SignUpState extends State<SignUp> {
 
     _showLoadingDialog();
 
-    final url = Uri.parse('https://untab-backend.nw.r.appspot.com/create_user'); // Replace with your Flask API URL
+    final url = Uri.parse('https://untab-backend.nw.r.appspot.com/create_user');
     final response = await http.post(
       url,
       headers: <String, String>{
@@ -67,7 +67,7 @@ class _SignUpState extends State<SignUp> {
       }),
     );
 
-    Navigator.of(context).pop(); // Close the loading dialog
+    Navigator.of(context).pop(); 
 
     if (response.statusCode == 200) {
       _showSuccessDialog('Registration Successful!', '/login');
@@ -107,8 +107,8 @@ class _SignUpState extends State<SignUp> {
             TextButton(
               child: const Text('OK'),
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                Navigator.pushReplacementNamed(context, route); // Navigate to the login page
+                Navigator.of(context).pop(); 
+                Navigator.pushReplacementNamed(context, route); 
               },
             ),
           ],

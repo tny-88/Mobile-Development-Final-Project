@@ -144,7 +144,7 @@ class _ProfileState extends State<Profile> {
           children: [
             const CircleAvatar(
               radius: 60,
-              backgroundImage: AssetImage('assets/images/profile.png'), // Replace with your own image
+              backgroundImage: AssetImage('assets/images/profile.png')
             ),
             const SizedBox(height: 20),
             Text(

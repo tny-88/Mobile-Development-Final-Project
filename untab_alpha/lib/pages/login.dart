@@ -75,16 +75,15 @@ class _LoginState extends State<Login> {
         }),
       );
 
-      Navigator.of(context).pop(); // Close the loading dialog
+      Navigator.of(context).pop();
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final token = data['access_token'];
 
-        // Store the token securely
         await _storage.write(key: 'jwt_token', value: token);
-
-        // Navigate to the homepage
+  
+     
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         final data = jsonDecode(response.body);

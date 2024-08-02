@@ -18,9 +18,9 @@ Future<void> scheduleNotification() async {
     tz.TZDateTime.now(tz.local).add(const Duration(minutes: 5)),
     const NotificationDetails(
       android: AndroidNotificationDetails(
-        'reminder_channel_id', // Unique ID for the channel
-        'Reminders', // Channel name
-        channelDescription: 'Notification channel for app reminders', // Channel description
+        'reminder_channel_id', 
+        'Reminders', 
+        channelDescription: 'Notification channel for app reminders', 
         importance: Importance.max,
         priority: Priority.high,
         showWhen: false,
@@ -53,7 +53,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   @override
   void initState() {
     super.initState();
-    scheduleNotification(); // Schedule the notification
+    scheduleNotification();
   }
 
   @override

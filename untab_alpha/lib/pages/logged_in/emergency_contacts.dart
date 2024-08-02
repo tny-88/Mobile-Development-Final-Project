@@ -85,7 +85,6 @@ class _EmergencyContactsState extends State<EmergencyContacts> {
                     final relationship = relationshipController.text;
 
                     if (fname.isNotEmpty && lname.isNotEmpty && phoneNumber.isNotEmpty && relationship.isNotEmpty && phoneNumber.length == 10 && int.tryParse(phoneNumber) != null ) {
-                      // Call API to add contact
                       final success = await ApiService.addEmergencyContact(
                         fname: fname,
                         lname: lname,
@@ -93,11 +92,9 @@ class _EmergencyContactsState extends State<EmergencyContacts> {
                         relationship: relationship,
                       );
                       if (success) {
-                        // Reload contacts
                         await loadContacts();
                         Navigator.of(context).pop();
                       } else {
-                        // Show error message
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                           content: Text('Failed to add contact.'),
                         ));
