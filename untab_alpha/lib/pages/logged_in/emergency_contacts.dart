@@ -34,76 +34,87 @@ class _EmergencyContactsState extends State<EmergencyContacts> {
     final TextEditingController lnameController = TextEditingController();
     final TextEditingController phoneController = TextEditingController();
     final TextEditingController relationshipController = TextEditingController();
+    bool isLoading = false;
 
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Emergency Contact'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                TextField(
-                  controller: fnameController,
-                  decoration: const InputDecoration(labelText: 'First Name'),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add Emergency Contact'),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    TextField(
+                      controller: fnameController,
+                      decoration: const InputDecoration(labelText: 'First Name'),
+                    ),
+                    TextField(
+                      controller: lnameController,
+                      decoration: const InputDecoration(labelText: 'Last Name'),
+                    ),
+                    TextField(
+                      controller: phoneController,
+                      decoration: const InputDecoration(labelText: 'Phone Number'),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    TextField(
+                      controller: relationshipController,
+                      decoration: const InputDecoration(labelText: 'Relationship'),
+                    ),
+                  ],
                 ),
-                TextField(
-                  controller: lnameController,
-                  decoration: const InputDecoration(labelText: 'Last Name'),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
-                TextField(
-                  controller: phoneController,
-                  decoration: const InputDecoration(labelText: 'Phone Number'),
-                  keyboardType: TextInputType.phone,
-                ),
-                TextField(
-                  controller: relationshipController,
-                  decoration: const InputDecoration(labelText: 'Relationship'),
+                TextButton(
+                  child: isLoading ? CircularProgressIndicator() : const Text('Add'),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final fname = fnameController.text;
+                    final lname = lnameController.text;
+                    final phoneNumber = phoneController.text;
+                    final relationship = relationshipController.text;
+
+                    if (fname.isNotEmpty && lname.isNotEmpty && phoneNumber.isNotEmpty && relationship.isNotEmpty && phoneNumber.length == 10 && int.tryParse(phoneNumber) != null ) {
+                      // Call API to add contact
+                      final success = await ApiService.addEmergencyContact(
+                        fname: fname,
+                        lname: lname,
+                        phoneNumber: phoneNumber,
+                        relationship: relationship,
+                      );
+                      if (success) {
+                        // Reload contacts
+                        await loadContacts();
+                        Navigator.of(context).pop();
+                      } else {
+                        // Show error message
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Failed to add contact.'),
+                        ));
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Please check if all fields are valid.'),
+                      ));
+                    }
+                    setState(() {
+                      isLoading = false;
+                    });
+                  },
                 ),
               ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Add'),
-              onPressed: () async {
-                final fname = fnameController.text;
-                final lname = lnameController.text;
-                final phoneNumber = phoneController.text;
-                final relationship = relationshipController.text;
-
-                if (fname.isNotEmpty && lname.isNotEmpty && phoneNumber.isNotEmpty && relationship.isNotEmpty) {
-                  // Call API to add contact
-                  final success = await ApiService.addEmergencyContact(
-                    fname: fname,
-                    lname: lname,
-                    phoneNumber: phoneNumber,
-                    relationship: relationship,
-                  );
-                  if (success) {
-                    // Reload contacts
-                    loadContacts();
-                    Navigator.of(context).pop();
-                  } else {
-                    // Show error message
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Failed to add contact.'),
-                    ));
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Please check if all fields are valid.'),
-                  ));
-                }
-              },
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -114,93 +125,110 @@ class _EmergencyContactsState extends State<EmergencyContacts> {
     final TextEditingController lnameController = TextEditingController(text: contact['lname']);
     final TextEditingController phoneController = TextEditingController(text: contact['phoneNumber']);
     final TextEditingController relationshipController = TextEditingController(text: contact['relationship']);
+    bool isLoading = false;
 
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit Emergency Contact'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                TextField(
-                  controller: fnameController,
-                  decoration: const InputDecoration(labelText: 'First Name'),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Edit Emergency Contact'),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    TextField(
+                      controller: fnameController,
+                      decoration: const InputDecoration(labelText: 'First Name'),
+                    ),
+                    TextField(
+                      controller: lnameController,
+                      decoration: const InputDecoration(labelText: 'Last Name'),
+                    ),
+                    TextField(
+                      controller: phoneController,
+                      decoration: const InputDecoration(labelText: 'Phone Number'),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    TextField(
+                      controller: relationshipController,
+                      decoration: const InputDecoration(labelText: 'Relationship'),
+                    ),
+                  ],
                 ),
-                TextField(
-                  controller: lnameController,
-                  decoration: const InputDecoration(labelText: 'Last Name'),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
-                TextField(
-                  controller: phoneController,
-                  decoration: const InputDecoration(labelText: 'Phone Number'),
-                  keyboardType: TextInputType.phone,
+                TextButton(
+                  child: isLoading ? CircularProgressIndicator() : const Text('Save'),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final fname = fnameController.text;
+                    final lname = lnameController.text;
+                    final phoneNumber = phoneController.text;
+                    final relationship = relationshipController.text;
+
+                    if (fname.isNotEmpty && lname.isNotEmpty && phoneNumber.isNotEmpty && relationship.isNotEmpty && phoneNumber.length == 10 && int.tryParse(phoneNumber) != null ) {
+                      // Call API to update contact
+                      final success = await ApiService.updateEmergencyContact(
+                        contactId: contact['contactID'],
+                        fname: fname,
+                        lname: lname,
+                        phoneNumber: phoneNumber,
+                        relationship: relationship,
+                      );
+                      if (success) {
+                        // Reload contacts
+                        await loadContacts();
+                        Navigator.of(context).pop();
+                      } else {
+                        // Show error message
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Failed to update contact.'),
+                        ));
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Please check if all fields are valid.'),
+                      ));
+                    }
+                    setState(() {
+                      isLoading = false;
+                    });
+                  },
                 ),
-                TextField(
-                  controller: relationshipController,
-                  decoration: const InputDecoration(labelText: 'Relationship'),
+                TextButton(
+                  child: const Text('Delete'),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final success = await ApiService.deleteEmergencyContact(contact['contactID']);
+                    if (success) {
+                      // Reload contacts
+                      await loadContacts();
+                      Navigator.of(context).pop();
+                    } else {
+                      // Show error message
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Failed to delete contact.'),
+                      ));
+                    }
+                    setState(() {
+                      isLoading = false;
+                    });
+                  },
                 ),
               ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Save'),
-              onPressed: () async {
-                final fname = fnameController.text;
-                final lname = lnameController.text;
-                final phoneNumber = phoneController.text;
-                final relationship = relationshipController.text;
-
-                if (fname.isNotEmpty && lname.isNotEmpty && phoneNumber.isNotEmpty && relationship.isNotEmpty) {
-                  // Call API to update contact
-                  final success = await ApiService.updateEmergencyContact(
-                    contactId: contact['contactID'],
-                    fname: fname,
-                    lname: lname,
-                    phoneNumber: phoneNumber,
-                    relationship: relationship,
-                  );
-                  if (success) {
-                    // Reload contacts
-                    loadContacts();
-                    Navigator.of(context).pop();
-                  } else {
-                    // Show error message
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Failed to update contact.'),
-                    ));
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Please check if all fields are valid.'),
-                  ));
-                }
-              },
-            ),
-            TextButton(
-              child: const Text('Delete'),
-              onPressed: () async {
-                final success = await ApiService.deleteEmergencyContact(contact['contactID']);
-                if (success) {
-                  // Reload contacts
-                  loadContacts();
-                  Navigator.of(context).pop();
-                } else {
-                  // Show error message
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Failed to delete contact.'),
-                  ));
-                }
-              },
-            ),
-          ],
+            );
+          },
         );
       },
     );

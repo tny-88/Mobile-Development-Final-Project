@@ -1,9 +1,6 @@
-// api_service.dart
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/timezone.dart' as tz;
 
 class ApiService {
   static const String baseUrl = 'https://untab-backend.nw.r.appspot.com';
@@ -85,7 +82,6 @@ class ApiService {
   static Future<bool> addMedication({
     required String name,
     required String dosage,
-    required String frequency,
     String? notes,
     String? schedule,
   }) async {
@@ -104,7 +100,6 @@ class ApiService {
       body: jsonEncode({
         'name': name,
         'dosage': dosage,
-        'frequency': frequency,
         'notes': notes,
         'schedule': schedule,
       }),
@@ -114,6 +109,41 @@ class ApiService {
       return true;
     } else {
       print('Failed to add medication: ${response.statusCode} - ${response.reasonPhrase}');
+      return false;
+    }
+  }
+
+  static Future<bool> updateMedication({
+    required String id,
+    required String name,
+    required String dosage,
+    String? notes,
+    String? schedule,
+  }) async {
+    final jwtToken = await getJwtToken();
+    if (jwtToken == null) {
+      print('JWT token not found');
+      return false;
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/update_medication/$id'),
+      headers: {
+        'Authorization': 'Bearer $jwtToken',
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode({
+        'name': name,
+        'dosage': dosage,
+        'notes': notes,
+        'schedule': schedule,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print('Failed to update medication: ${response.statusCode} - ${response.reasonPhrase}');
       return false;
     }
   }
@@ -246,5 +276,3 @@ class ApiService {
     }
   }
 }
-
-

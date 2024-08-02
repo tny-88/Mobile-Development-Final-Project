@@ -54,140 +54,192 @@ class _HomepageState extends State<Homepage> {
     }
   }
 
-  
-
   Future<void> _addMedication() async {
     final TextEditingController dosageController = TextEditingController();
     final TextEditingController nameController = TextEditingController();
     final TextEditingController notesController = TextEditingController();
     final TextEditingController scheduleController = TextEditingController();
-
-    String dosageUnit = 'ml'; // Default value
-    String frequencyUnit = 'daily'; // Default value
-    String frequencyValue = ''; // Frequency number value
+    bool isLoading = false;
 
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Medication'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: dosageController,
-                        decoration: const InputDecoration(labelText: 'Dosage'),
-                        keyboardType: TextInputType.number,
-                      ),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add Medication'),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Name'),
                     ),
-                    const SizedBox(width: 8),
-                    DropdownButton<String>(
-                      value: dosageUnit,
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          dosageUnit = newValue!;
-                        });
-                      },
-                      items: <String>['ml', 'tablets']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                    TextField(
+                      controller: dosageController,
+                      decoration: const InputDecoration(labelText: 'Dosage'),
+                      keyboardType: TextInputType.text,
+                    ),
+                    TextField(
+                      controller: notesController,
+                      decoration: const InputDecoration(labelText: 'Notes'),
+                    ),
+                    TextField(
+                      controller: scheduleController,
+                      decoration: const InputDecoration(labelText: 'Schedule'),
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        decoration: const InputDecoration(labelText: 'Frequency Number'),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          frequencyValue = value;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    DropdownButton<String>(
-                      value: frequencyUnit,
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          frequencyUnit = newValue!;
-                        });
-                      },
-                      items: <String>['daily', 'hourly', 'weekly', 'biweekly']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                    ),
-                  ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
-                TextField(
-                  controller: notesController,
-                  decoration: const InputDecoration(labelText: 'Notes'),
-                ),
-                TextField(
-                  controller: scheduleController,
-                  decoration: const InputDecoration(labelText: 'Schedule'),
+                TextButton(
+                  child: isLoading ? CircularProgressIndicator() : const Text('Add'),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final name = nameController.text;
+                    final dosage = dosageController.text;
+                    final notes = notesController.text;
+                    final schedule = scheduleController.text;
+
+                    if (name.isNotEmpty && dosage.isNotEmpty && notes.isNotEmpty && schedule.isNotEmpty) {
+                      // Call API to add medication
+                      final success = await ApiService.addMedication(
+                        name: name,
+                        dosage: dosage,
+                        notes: notes,
+                        schedule: schedule,
+                      );
+                      if (success) {
+                        // Reload data
+                        await loadData();
+                        Navigator.of(context).pop();
+                      } else {
+                        // Show error message
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text('Failed to add medication.'),
+                          ));
+                        }
+                      }
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Please fill in all fields.'),
+                        ));
+                      }
+                    }
+                    setState(() {
+                      isLoading = false;
+                    });
+                  },
                 ),
               ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child:const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Add'),
-              onPressed: () async {
-                final name = nameController.text;
-                final dosage = '${dosageController.text} $dosageUnit';
-                final frequency = '$frequencyValue $frequencyUnit';
-                final notes = notesController.text;
-                final schedule = scheduleController.text;
+            );
+          },
+        );
+      },
+    );
+  }
 
-                if (name.isNotEmpty && dosage.isNotEmpty && frequency.isNotEmpty) {
-                  // Call API to add medication
-                  final success = await ApiService.addMedication(
-                    name: name,
-                    dosage: dosage,
-                    frequency: frequency,
-                    notes: notes,
-                    schedule: schedule,
-                  );
-                  if (success) {
-                    // Reload data
-                    await loadData();
+  Future<void> _editMedication(Map<String, dynamic> medication) async {
+    final TextEditingController dosageController = TextEditingController(text: medication['dosage']);
+    final TextEditingController nameController = TextEditingController(text: medication['name']);
+    final TextEditingController notesController = TextEditingController(text: medication['notes']);
+    final TextEditingController scheduleController = TextEditingController(text: medication['schedule']);
+    bool isLoading = false;
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Edit Medication'),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Name'),
+                    ),
+                    TextField(
+                      controller: dosageController,
+                      decoration: const InputDecoration(labelText: 'Dosage'),
+                      keyboardType: TextInputType.text,
+                    ),
+                    TextField(
+                      controller: notesController,
+                      decoration: const InputDecoration(labelText: 'Notes'),
+                    ),
+                    TextField(
+                      controller: scheduleController,
+                      decoration: const InputDecoration(labelText: 'Schedule'),
+                    ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
                     Navigator.of(context).pop();
-                  } else {
-                    // Show error message
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: const Text('Failed to add medication.'),
-                    ));
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar( const SnackBar(
-                    content: Text('Please fill in all required fields.'),
-                  ));
-                }
-              },
-            ),
-          ],
+                  },
+                ),
+                TextButton(
+                  child: isLoading ? CircularProgressIndicator() : const Text('Update'),
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final name = nameController.text;
+                    final dosage = dosageController.text;
+                    final notes = notesController.text;
+                    final schedule = scheduleController.text;
+
+                    if (name.isNotEmpty && dosage.isNotEmpty && notes.isNotEmpty && schedule.isNotEmpty && medication['medicationID'] != null && medication['medicationID'] is String) {
+                      // Call API to update medication
+                      final success = await ApiService.updateMedication(
+                        id: medication['medicationID'],
+                        name: name,
+                        dosage: dosage,
+                        notes: notes,
+                        schedule: schedule,
+                      );
+                      if (success) {
+                        // Reload data
+                        await loadData();
+                        Navigator.of(context).pop();
+                      } else {
+                        // Show error message
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text('Failed to update medication.'),
+                          ));
+                        }
+                      }
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Please fill in all fields.'),
+                        ));
+                      }
+                    }
+                    setState(() {
+                      isLoading = false;
+                    });
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -200,7 +252,6 @@ class _HomepageState extends State<Homepage> {
       appBar: AppBar(
         backgroundColor: Colors.purple[200],
         elevation: 0,
-        
       ),
       body: RefreshIndicator(
         onRefresh: loadData,
@@ -245,12 +296,12 @@ class _HomepageState extends State<Homepage> {
                               itemBuilder: (context, index) {
                                 final medication = medications[index];
                                 return Container(
-                                  width: 150, 
+                                  width: 150,
                                   margin: const EdgeInsets.symmetric(horizontal: 8.0),
                                   child: Card(
                                     child: InkWell(
                                       onTap: () {
-                                        // Navigate to detailed medication page
+                                        _editMedication(medication);
                                       },
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),
@@ -270,14 +321,6 @@ class _HomepageState extends State<Homepage> {
                                             const SizedBox(height: 10),
                                             Text(
                                               'Dosage: ${medication['dosage']}',
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.black54,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                            Text(
-                                              'Frequency: ${medication['frequency']}',
                                               style: const TextStyle(
                                                 fontSize: 14,
                                                 color: Colors.black54,
@@ -341,9 +384,8 @@ class _HomepageState extends State<Homepage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addMedication,
-        
         backgroundColor: Colors.purple[200],
-        child: const Icon(Icons.add)
+        child: const Icon(Icons.add),
       ),
     );
   }

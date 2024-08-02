@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -22,6 +24,8 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   String? _gender;
+
+  final _storage = FlutterSecureStorage();
 
   void _pickDate(BuildContext context) async {
     DateTime? selectedDate = await showDatePicker(
@@ -55,7 +59,7 @@ class _SignUpState extends State<SignUp> {
       body: jsonEncode(<String, dynamic>{
         'fname': _fnameController.text,
         'lname': _lnameController.text,
-        'email': _emailController.text,
+        'email': _emailController.text.toLowerCase(),
         'passwordHash': _passwordController.text,
         'gender': _gender,
         'phoneNumber': _phoneController.text,
@@ -67,6 +71,7 @@ class _SignUpState extends State<SignUp> {
 
     if (response.statusCode == 200) {
       _showSuccessDialog('Registration Successful!', '/login');
+      await _storage.delete(key: 'jwt_token');
     } else {
       final responseData = jsonDecode(response.body);
       _showErrorDialog(responseData['message'] ?? 'An error occurred');
@@ -78,7 +83,7 @@ class _SignUpState extends State<SignUp> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return Dialog(
+        return const Dialog(
           backgroundColor: Colors.transparent,
           child: Center(
             child: CircularProgressIndicator(
@@ -390,6 +395,7 @@ class _SignUpState extends State<SignUp> {
                   ),
                   onPressed: () {
                     if (_formKey.currentState?.validate() ?? false) {
+                      
                       _signUp();
                     }
                   },

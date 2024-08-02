@@ -6,7 +6,6 @@ import 'package:untab_alpha/pages/signup.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -21,6 +20,7 @@ class _LoginState extends State<Login> {
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
   bool _isBiometricEnabled = false;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -70,7 +70,7 @@ class _LoginState extends State<Login> {
         Uri.parse('https://untab-backend.nw.r.appspot.com/login'),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({
-          'email': _emailController.text,
+          'email': _emailController.text.toLowerCase(),
           'password': _passwordController.text,
         }),
       );
@@ -98,8 +98,13 @@ class _LoginState extends State<Login> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const AlertDialog(
-          content: CircularProgressIndicator(),
+        return const Dialog(
+          backgroundColor: Colors.transparent,
+          child: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
         );
       },
     );
@@ -192,8 +197,21 @@ class _LoginState extends State<Login> {
                             borderRadius: BorderRadius.circular(20),
                             borderSide: BorderSide.none,
                           ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                         ),
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         style: const TextStyle(color: Colors.white),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -228,7 +246,8 @@ class _LoginState extends State<Login> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const SignUp()),
+                                MaterialPageRoute(
+                                    builder: (context) => const SignUp()),
                               );
                             },
                             child: const Text(
@@ -249,4 +268,3 @@ class _LoginState extends State<Login> {
     );
   }
 }
-
